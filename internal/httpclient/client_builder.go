@@ -97,6 +97,8 @@ func (rq *JSONRequest[RESP]) Do(method, url string, reqBody any) (RESP, error) {
 		return resp, err
 	}
 
+	// TODO: handle different status classes
+
 	_, err = rq.deserialize(body, &resp)
 
 	return resp, err

@@ -24,7 +24,7 @@ type AuthHandlers struct {
 }
 
 func NewAuthHandlers(conf AuthHandlersConfig, githubClient *githubapi.GithubApi) AuthHandlers {
-	return AuthHandlers{conf: conf}
+	return AuthHandlers{conf: conf, githubClient: githubClient}
 }
 
 func (ah AuthHandlers) RootHandler(w http.ResponseWriter, r *http.Request) {
@@ -50,6 +50,7 @@ func (ah AuthHandlers) GithubCallbackHandler() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		code := r.URL.Query().Get("code")
 
+		fmt.Printf("ah.githubClient: %v\n", ah.githubClient)
 		ghAuth, _ := ah.githubClient.GetGithubAccessToken(code)
 
 		http.SetCookie(w, &http.Cookie{

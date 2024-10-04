@@ -42,7 +42,7 @@ func main() {
 		},
 	)
 
-	profileHandlers := profile.NewProfileHandlers()
+	profileHandlers := profile.NewProfileHandlers(githubClient)
 	profileHandlers.Use(requestLog)
 	profileHandlers.Use(sessionMiddleware)
 	// Route where the authenticated user is redirected to

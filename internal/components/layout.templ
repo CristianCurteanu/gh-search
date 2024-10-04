@@ -1,5 +1,7 @@
 package components
 
+import "fmt"
+
 templ RootLayout() {
     <!DOCTYPE html>
     <html lang="en">
@@ -8,6 +10,7 @@ templ RootLayout() {
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Github Repository Search</title>
         <script src="https://cdn.tailwindcss.com"></script>
+        <script src="https://unpkg.com/htmx.org@2.0.2" integrity="sha384-Y7hw+L/jvKeWIRRkqWYfPcvVxHzVzn5REgzbawhxAuQGwX1XWe70vji+VSeHOThJ" crossorigin="anonymous"></script>
     </head>
     <body>
         { children... }
@@ -30,17 +33,17 @@ templ LoginPage(contents templ.Component) {
 }
 
 type ProfileData struct {
-    Username string `json:"login"`
-    Id string `json:"id"` 
-    AvatarURL string `json:"avatar_url"`
-    Company string `json:"company"`
-    Repos int `json:"public_repos"`
-    Gists int `json:"public_gists"`
-    Followers int `json:"followers"`
-    Following int `json:"following"`
+	Username  string 
+	Id        string 
+	AvatarURL string 
+	Company   string 
+	Repos     string    
+	Gists     string    
+	Followers string    
+	Following string    
 }
 
-templ ProfilePage(data ProfileData) {
+templ ProfileLayout(data ProfileData) {
     @RootLayout() {
         <div class="w-full flex flex-col sm:flex-row flex-grow overflow-hidden">
             <div class="sm:w-1/3 md:1/4 w-full flex-shrink flex-grow-0 p-4">
@@ -52,7 +55,9 @@ templ ProfilePage(data ProfileData) {
 
                     <ul class="flex sm:flex-col overflow-hidden content-center justify-between">
                         <li class="py-2 rounded">
-                            <h2 class="text-3xl font-bold truncate">{ data.Username }</h2>
+                            <a href="/profile" class="hover:underline">
+                                <h2 class="text-3xl font-bold truncate">{ data.Username }</h2>
+                            </a>
                         </li>
                         <li class="py-2 rounded">
                             <svg class="octicon octicon-organization inline" viewBox="0 0 16 16" version="1.1" width="16" height="16" aria-hidden="true"><path d="M1.75 16A1.75 1.75 0 0 1 0 14.25V1.75C0 .784.784 0 1.75 0h8.5C11.216 0 12 .784 12 1.75v12.5c0 .085-.006.168-.018.25h2.268a.25.25 0 0 0 .25-.25V8.285a.25.25 0 0 0-.111-.208l-1.055-.703a.749.749 0 1 1 .832-1.248l1.055.703c.487.325.779.871.779 1.456v5.965A1.75 1.75 0 0 1 14.25 16h-3.5a.766.766 0 0 1-.197-.026c-.099.017-.2.026-.303.026h-3a.75.75 0 0 1-.75-.75V14h-1v1.25a.75.75 0 0 1-.75.75Zm-.25-1.75c0 .138.112.25.25.25H4v-1.25a.75.75 0 0 1 .75-.75h2.5a.75.75 0 0 1 .75.75v1.25h2.25a.25.25 0 0 0 .25-.25V1.75a.25.25 0 0 0-.25-.25h-8.5a.25.25 0 0 0-.25.25ZM3.75 6h.5a.75.75 0 0 1 0 1.5h-.5a.75.75 0 0 1 0-1.5ZM3 3.75A.75.75 0 0 1 3.75 3h.5a.75.75 0 0 1 0 1.5h-.5A.75.75 0 0 1 3 3.75Zm4 3A.75.75 0 0 1 7.75 6h.5a.75.75 0 0 1 0 1.5h-.5A.75.75 0 0 1 7 6.75ZM7.75 3h.5a.75.75 0 0 1 0 1.5h-.5a.75.75 0 0 1 0-1.5ZM3 9.75A.75.75 0 0 1 3.75 9h.5a.75.75 0 0 1 0 1.5h-.5A.75.75 0 0 1 3 9.75ZM7.75 9h.5a.75.75 0 0 1 0 1.5h-.5a.75.75 0 0 1 0-1.5Z"></path></svg>
@@ -74,7 +79,7 @@ templ ProfilePage(data ProfileData) {
                             3 followers - 8 following
                         </li>
                         <li class="py-2 rounded">
-                            <a class="" href="#">
+                            <a class="" href="/logout">
                                 <svg aria-hidden="true" focusable="false" class="inline Octicon-sc-9kayk9-0" viewBox="0 0 16 16" width="16" height="16" fill="currentColor" style="display: inline-block; user-select: none; vertical-align: text-bottom; overflow: visible;"><path d="M2 2.75C2 1.784 2.784 1 3.75 1h2.5a.75.75 0 0 1 0 1.5h-2.5a.25.25 0 0 0-.25.25v10.5c0 .138.112.25.25.25h2.5a.75.75 0 0 1 0 1.5h-2.5A1.75 1.75 0 0 1 2 13.25Zm10.44 4.5-1.97-1.97a.749.749 0 0 1 .326-1.275.749.749 0 0 1 .734.215l3.25 3.25a.75.75 0 0 1 0 1.06l-3.25 3.25a.749.749 0 0 1-1.275-.326.749.749 0 0 1 .215-.734l1.97-1.97H6.75a.75.75 0 0 1 0-1.5Z"></path></svg>
                                 <span class="hidden sm:inline">Logout</span>
                             </a>
@@ -83,194 +88,266 @@ templ ProfilePage(data ProfileData) {
                 </div>
             </div>
             <main role="main" class="w-full flex-grow p-3 overflow-auto">
-                <div class="w-full min-w-[200px] mt-4">
-                <label class="block mb-1 text-sm text-slate-600">
-                    Search repositories:
-                </label>
-                <div class="flex flex-row">
-                    <div class="relative">
-                        <div class="absolute top-2 left-0 flex items-center pl-3">
-                            <button id="dropdownButton" class="h-full text-sm flex justify-center items-center bg-transparent text-slate-700 focus:outline-none">
-                                Search scope
-                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-4 w-4 ml-1">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
-                                </svg>
-                            </button>
-                            <div class="h-6 border-l border-slate-200 ml-2"></div>
-                            <div id="dropdownMenu" class="min-w-[150px] overflow-hidden absolute left-0 w-full mt-10 hidden w-full bg-white border border-slate-200 rounded-md shadow-lg z-10">
-                                <ul id="dropdownOptions">
-                                    <li class="px-4 py-2 text-slate-600 hover:bg-slate-50 text-sm cursor-pointer" data-pl="pl-14">User</li>
-                                    <li class="px-4 py-2 text-slate-600 hover:bg-slate-50 text-sm cursor-pointer" data-pl="pl-28">Organization</li>
-                                </ul>
-                            </div>
-                            </div>
-                        <input
-                        type="text"
-                        id="search-scope"
-                        class="w-full bg-transparent placeholder:text-slate-400 text-slate-700 text-sm border border-slate-200 rounded-md pl-32 pr-3 py-2 transition duration-300 ease focus:outline-none focus:border-slate-400 hover:border-slate-300 shadow-sm focus:shadow"
-                        placeholder="Name" />
-                    </div>
-                    <div class="relative">
-                        <input type="text" class="w-full bg-transparent placeholder:text-slate-400 text-slate-700 text-sm border border-slate-200 rounded-md pl-3 pr-20 py-2 transition duration-300 ease focus:outline-none focus:border-slate-400 hover:border-slate-300 shadow-sm focus:shadow" placeholder="Query" />
-                        <button class="absolute right-1 top-1 rounded bg-slate-800 py-1 px-2.5 border border-transparent text-center text-sm text-white transition-all shadow-sm hover:shadow focus:bg-slate-700 focus:shadow-none active:bg-slate-700 hover:bg-slate-700 active:shadow-none disabled:pointer-events-none disabled:opacity-50 disabled:shadow-none" type="button">
-                        Search
-                        </button>
-                    </div>
-                
-                </div>
-
-                </div>
- 
-<script>
-  document.getElementById('dropdownButton').addEventListener('click', function() {
-    var dropdownMenu = document.getElementById('dropdownMenu');
-    if (dropdownMenu.classList.contains('hidden')) {
-      dropdownMenu.classList.remove('hidden');
-    } else {
-      dropdownMenu.classList.add('hidden');
-    }
-  });
- 
-  document.getElementById('dropdownOptions').addEventListener('click', function(event) {
-    if (event.target.tagName === 'LI') {
-      document.getElementById('dropdownButton').textContent = event.target.textContent;
-      document.getElementById('dropdownMenu').classList.add('hidden');
-      
-      var input = document.getElementById("search-scope")
-      var rcl = input.classList.entries().find((cl) => cl[1].startsWith("pl-"))
-      if (rcl === undefined) {
-        input.classList.add(event.target.dataset['pl'])
-      } else {
-        input.classList.replace(rcl[1], event.target.dataset['pl'])
-      }
-    }
-  });
- 
-  document.addEventListener('click', function(event) {
-    var isClickInside = document.getElementById('dropdownButton').contains(event.target) || document.getElementById('dropdownMenu').contains(event.target);
-    var dropdownMenu = document.getElementById('dropdownMenu');
- 
-    if (!isClickInside) {
-      dropdownMenu.classList.add('hidden');
-    }
-  });
-</script>
-                @SearchResult()
-
+                { children... }
             </main>
         </div>
     }
 }
 
-templ SearchResult() {
-<ul role="list" class="divide-y divide-gray-100 mt-10">
-  <li class="flex justify-between gap-x-6 py-5">
-    <div class="flex min-w-0 gap-x-4">
-      <img class="h-12 w-12 flex-none rounded-full bg-gray-50" src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80" alt="">
-      <div class="min-w-0 flex-auto">
-        <p class="text-sm font-semibold leading-6 text-gray-900">Leslie Alexander</p>
-        <p class="mt-1 truncate text-xs leading-5 text-gray-500">leslie.alexander@example.com</p>
-      </div>
-    </div>
-    <div class="hidden shrink-0 sm:flex sm:flex-col sm:items-end">
-      <p class="text-sm leading-6 text-gray-900">Co-Founder / CEO</p>
-      <p class="mt-1 text-xs leading-5 text-gray-500">Last seen <time datetime="2023-01-23T13:23Z">3h ago</time></p>
-    </div>
-  </li>
-  <li class="flex justify-between gap-x-6 py-5">
-    <div class="flex min-w-0 gap-x-4">
-      <img class="h-12 w-12 flex-none rounded-full bg-gray-50" src="https://images.unsplash.com/photo-1519244703995-f4e0f30006d5?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80" alt="">
-      <div class="min-w-0 flex-auto">
-        <p class="text-sm font-semibold leading-6 text-gray-900">Michael Foster</p>
-        <p class="mt-1 truncate text-xs leading-5 text-gray-500">michael.foster@example.com</p>
-      </div>
-    </div>
-    <div class="hidden shrink-0 sm:flex sm:flex-col sm:items-end">
-      <p class="text-sm leading-6 text-gray-900">Co-Founder / CTO</p>
-      <p class="mt-1 text-xs leading-5 text-gray-500">Last seen <time datetime="2023-01-23T13:23Z">3h ago</time></p>
-    </div>
-  </li>
-  <li class="flex justify-between gap-x-6 py-5">
-    <div class="flex min-w-0 gap-x-4">
-      <img class="h-12 w-12 flex-none rounded-full bg-gray-50" src="https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80" alt="">
-      <div class="min-w-0 flex-auto">
-        <p class="text-sm font-semibold leading-6 text-gray-900">Dries Vincent</p>
-        <p class="mt-1 truncate text-xs leading-5 text-gray-500">dries.vincent@example.com</p>
-      </div>
-    </div>
-    <div class="hidden shrink-0 sm:flex sm:flex-col sm:items-end">
-      <p class="text-sm leading-6 text-gray-900">Business Relations</p>
-      <div class="mt-1 flex items-center gap-x-1.5">
-        <div class="flex-none rounded-full bg-emerald-500/20 p-1">
-          <div class="h-1.5 w-1.5 rounded-full bg-emerald-500"></div>
+templ ProfilePage(data ProfileData) {
+    @ProfileLayout(data) {
+    // <form></form>
+        <div class="w-full min-w-[200px] mt-4">
+            <label class="block mb-1 text-sm text-slate-600">
+                Search repositories:
+            </label>
+            <div class="flex flex-row">
+                <div class="relative">
+                    <div class="absolute top-2 left-0 flex items-center pl-3">
+                        <button id="dropdownButton" class="h-full text-sm flex justify-center items-center bg-transparent text-slate-700 focus:outline-none">
+                            Search scope
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-4 w-4 ml-1">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5" />
+                            </svg>
+                        </button>
+                        <div class="h-6 border-l border-slate-200 ml-2"></div>
+                        <div id="dropdownMenu" class="min-w-[150px] overflow-hidden absolute left-0 w-full mt-10 hidden w-full bg-white border border-slate-200 rounded-md shadow-lg z-10">
+                            <ul id="dropdownOptions">
+                                <li data-owner-type="user" class="px-4 py-2 text-slate-600 hover:bg-slate-50 text-sm cursor-pointer" data-pl="pl-14">User</li>
+                                <li data-owner-type="org" class="px-4 py-2 text-slate-600 hover:bg-slate-50 text-sm cursor-pointer" data-pl="pl-28">Organization</li>
+                            </ul>
+                        </div>
+                        </div>
+                    <input
+                    type="text"
+                    id="ownerName"
+                    class="w-full bg-transparent placeholder:text-slate-400 text-slate-700 text-sm border border-slate-200 rounded-md pl-32 pr-3 py-2 transition duration-300 ease focus:outline-none focus:border-slate-400 hover:border-slate-300 shadow-sm focus:shadow"
+                    placeholder="Name" />
+                </div>
+                <div class="relative inline">
+                    <input type="text" id="repoQuery" class="w-full bg-transparent placeholder:text-slate-400 text-slate-700 text-sm border border-slate-200 rounded-md pl-3 pr-20 py-2 transition duration-300 ease focus:outline-none focus:border-slate-400 hover:border-slate-300 shadow-sm focus:shadow" placeholder="Query" />
+                    <button class="absolute right-1 top-1 rounded bg-slate-800 py-1 px-2.5 border border-transparent text-center text-sm text-white transition-all shadow-sm hover:shadow focus:bg-slate-700 focus:shadow-none active:bg-slate-700 hover:bg-slate-700 active:shadow-none disabled:pointer-events-none disabled:opacity-50 disabled:shadow-none" type="button"
+                            hx-get="http://localhost:3000/search"
+                            hx-vals='js:{
+                                "ownerType": ownerType,
+                                "ownerName": ownerName,
+                                "repoQuery": repoQuery
+                            }'
+                            hx-target="#searchResults"
+                            hx-swap="innerHTML"
+                            hx-indicator="#search-loading"
+                            >
+
+                        Search
+                    </button>
+                </div>
+                <div id="search-loading" class="htmx-indicator relative pt-1 pl-3">
+                    <svg  class="w-4 h-4 text-gray-300 animate-spin inline" viewBox="0 0 64 64" fill="none"
+                                xmlns="http://www.w3.org/2000/svg" width="24" height="24">
+                        <path
+                            d="M32 3C35.8083 3 39.5794 3.75011 43.0978 5.20749C46.6163 6.66488 49.8132 8.80101 52.5061 11.4939C55.199 14.1868 57.3351 17.3837 58.7925 20.9022C60.2499 24.4206 61 28.1917 61 32C61 35.8083 60.2499 39.5794 58.7925 43.0978C57.3351 46.6163 55.199 49.8132 52.5061 52.5061C49.8132 55.199 46.6163 57.3351 43.0978 58.7925C39.5794 60.2499 35.8083 61 32 61C28.1917 61 24.4206 60.2499 20.9022 58.7925C17.3837 57.3351 14.1868 55.199 11.4939 52.5061C8.801 49.8132 6.66487 46.6163 5.20749 43.0978C3.7501 39.5794 3 35.8083 3 32C3 28.1917 3.75011 24.4206 5.2075 20.9022C6.66489 17.3837 8.80101 14.1868 11.4939 11.4939C14.1868 8.80099 17.3838 6.66487 20.9022 5.20749C24.4206 3.7501 28.1917 3 32 3L32 3Z"
+                            stroke="currentColor" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"></path>
+                        <path
+                            d="M32 3C36.5778 3 41.0906 4.08374 45.1692 6.16256C49.2477 8.24138 52.7762 11.2562 55.466 14.9605C58.1558 18.6647 59.9304 22.9531 60.6448 27.4748C61.3591 31.9965 60.9928 36.6232 59.5759 40.9762"
+                            stroke="currentColor" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" class="text-gray-900">
+                        </path>
+                    </svg>
+                </div>
+            </div>
+        </div>                
+        // </form>
+
+        <div id="searchResults">
+            // @SearchResult()                                                        
         </div>
-        <p class="text-xs leading-5 text-gray-500">Online</p>
-      </div>
-    </div>
-  </li>
-  <li class="flex justify-between gap-x-6 py-5">
-    <div class="flex min-w-0 gap-x-4">
-      <img class="h-12 w-12 flex-none rounded-full bg-gray-50" src="https://images.unsplash.com/photo-1517841905240-472988babdf9?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80" alt="">
-      <div class="min-w-0 flex-auto">
-        <p class="text-sm font-semibold leading-6 text-gray-900">Lindsay Walton</p>
-        <p class="mt-1 truncate text-xs leading-5 text-gray-500">lindsay.walton@example.com</p>
-      </div>
-    </div>
-    <div class="hidden shrink-0 sm:flex sm:flex-col sm:items-end">
-      <p class="text-sm leading-6 text-gray-900">Front-end Developer</p>
-      <p class="mt-1 text-xs leading-5 text-gray-500">Last seen <time datetime="2023-01-23T13:23Z">3h ago</time></p>
-    </div>
-  </li>
-  <li class="flex justify-between gap-x-6 py-5">
-    <div class="flex min-w-0 gap-x-4">
-      <img class="h-12 w-12 flex-none rounded-full bg-gray-50" src="https://images.unsplash.com/photo-1438761681033-6461ffad8d80?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80" alt="">
-      <div class="min-w-0 flex-auto">
-        <p class="text-sm font-semibold leading-6 text-gray-900">Courtney Henry</p>
-        <p class="mt-1 truncate text-xs leading-5 text-gray-500">courtney.henry@example.com</p>
-      </div>
-    </div>
-    <div class="hidden shrink-0 sm:flex sm:flex-col sm:items-end">
-      <p class="text-sm leading-6 text-gray-900">Designer</p>
-      <p class="mt-1 text-xs leading-5 text-gray-500">Last seen <time datetime="2023-01-23T13:23Z">3h ago</time></p>
-    </div>
-  </li>
-  <li class="flex justify-between gap-x-6 py-5">
-    <div class="flex min-w-0 gap-x-4">
-      <img class="h-12 w-12 flex-none rounded-full bg-gray-50" src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80" alt="">
-      <div class="min-w-0 flex-auto">
-        <p class="text-sm font-semibold leading-6 text-gray-900">Tom Cook</p>
-        <p class="mt-1 truncate text-xs leading-5 text-gray-500">tom.cook@example.com</p>
-      </div>
-    </div>
-    <div class="hidden shrink-0 sm:flex sm:flex-col sm:items-end">
-      <p class="text-sm leading-6 text-gray-900">Director of Product</p>
-      <div class="mt-1 flex items-center gap-x-1.5">
-        <div class="flex-none rounded-full bg-emerald-500/20 p-1">
-          <div class="h-1.5 w-1.5 rounded-full bg-emerald-500"></div>
+        <script>
+            var ownerType = "";
+            var ownerName = "";
+            var repoName = "";
+
+            document.getElementById('dropdownButton').addEventListener('click', function() {
+                var dropdownMenu = document.getElementById('dropdownMenu');
+                if (dropdownMenu.classList.contains('hidden')) {
+                dropdownMenu.classList.remove('hidden');
+                } else {
+                dropdownMenu.classList.add('hidden');
+                }
+            });
+            
+            document.getElementById('dropdownOptions').addEventListener('click', function(event) {
+                if (event.target.tagName === 'LI') {
+                    document.getElementById('dropdownButton').textContent = event.target.textContent;
+                    document.getElementById('dropdownMenu').classList.add('hidden');
+                    
+                    var input = document.getElementById("ownerName")
+                    
+                    ownerType = event.target.dataset['ownerType']
+                    var rcl = input.classList.entries().find((cl) => cl[1].startsWith("pl-"))
+                    if (rcl === undefined) {
+                        input.classList.add(event.target.dataset['pl'])
+                    } else {
+                        input.classList.replace(rcl[1], event.target.dataset['pl'])
+                    }
+                }
+            });
+
+            document.getElementById('ownerName').addEventListener('keyup', function(event) {
+                ownerName = event.target.value;
+            })
+            
+            document.getElementById('repoQuery').addEventListener('keyup', function(event) {
+                repoQuery = event.target.value;
+            })
+
+            document.addEventListener('click', function(event) {
+                var isClickInside = document.getElementById('dropdownButton').contains(event.target) || document.getElementById('dropdownMenu').contains(event.target);
+                var dropdownMenu = document.getElementById('dropdownMenu');
+            
+                if (!isClickInside) {
+                dropdownMenu.classList.add('hidden');
+                }
+            });
+
+            function scrollTop() {
+                window.scrollTo({
+                    top: 0,
+                    behavior: 'smooth'
+                });
+            }
+        </script>
+    }
+}
+
+type Repository struct {               
+	Name        string       
+	FullName    string       
+	Description string       
+	Url         string       
+	OwnerName   string
+    OwnerAvatar string
+	IsPrivate   string         
+	IsFork      string         
+	Size        string          
+	Stars       string          
+	Watchers    string          
+	Forks       string          
+	Language    string       
+	Issues      string   
+    UpdatedAt   string       
+}
+
+templ NoResults(message string) {
+    <div class="container p-32">
+        <img alt="Mona looking through a globe hologram for code" 
+             src="https://github.com/images/modules/search/light.png" 
+             srcset="https://github.com/images/modules/search/light.png 1x, https://github.com/images/modules/search/light2x.png 2x" 
+             style="display: block;">
+        <div class="container content-center mt-20">
+            <h2 class="text-3xl font-bold ml-35">
+            { message }
+        </h2>
         </div>
-        <p class="text-xs leading-5 text-gray-500">Online</p>
-      </div>
     </div>
-  </li>
+}
+
+templ WrappedNoResults(data ProfileData, message string) {
+    @ProfileLayout(data) {
+        @NoResults(message)
+    }
+}
+
+templ SearchResult(items []Repository, prevPage int, currentPage int, nextPage int, totalPages int) {
+<ul role="list" class="divide-y divide-gray-100 mt-10 mr-75 md:mr-5 sm:mr-1">
+  for _, item := range items {
+    <li class="flex justify-between gap-x-6 py-5">
+        <div class="flex min-w-0 gap-x-4">
+            <img class="h-12 w-12 flex-none rounded-full bg-gray-50" src={ item.OwnerAvatar } alt="">
+            <div class="min-w-0 flex-auto">
+                <a class="hover:underline" href={ templ.SafeURL(fmt.Sprintf("/repository?owner=%s&repo=%s", item.OwnerName, item.Name)) }>
+                    <p class="text-sm font-semibold leading-6 text-gray-900">{ item.FullName }</p>
+                </a>
+                <p class="mt-1 truncate text-xs leading-5 text-gray-500">{ item.Description }</p>
+            </div>
+        </div>
+        <div class="hidden shrink-0 sm:flex sm:flex-col sm:items-end">
+            <p class="text-sm leading-6 text-gray-900">
+                <svg aria-hidden="true" height="16" viewBox="0 0 16 16" version="1.1" width="16" data-view-component="true" class="octicon inline octicon-star mr-2">
+                    <path d="M8 .25a.75.75 0 0 1 .673.418l1.882 3.815 4.21.612a.75.75 0 0 1 .416 1.279l-3.046 2.97.719 4.192a.751.751 0 0 1-1.088.791L8 12.347l-3.766 1.98a.75.75 0 0 1-1.088-.79l.72-4.194L.818 6.374a.75.75 0 0 1 .416-1.28l4.21-.611L7.327.668A.75.75 0 0 1 8 .25Zm0 2.445L6.615 5.5a.75.75 0 0 1-.564.41l-3.097.45 2.24 2.184a.75.75 0 0 1 .216.664l-.528 3.084 2.769-1.456a.75.75 0 0 1 .698 0l2.77 1.456-.53-3.084a.75.75 0 0 1 .216-.664l2.24-2.183-3.096-.45a.75.75 0 0 1-.564-.41L8 2.694Z"></path>
+                </svg>
+                <b>{ item.Stars }</b> Stars
+            </p>
+            <p class="text-sm leading-6 text-gray-900">
+                <svg aria-hidden="true" height="16" viewBox="0 0 16 16" version="1.1" width="16" data-view-component="true" class="octicon octicon-repo-forked inline mr-2">
+                    <path d="M5 5.372v.878c0 .414.336.75.75.75h4.5a.75.75 0 0 0 .75-.75v-.878a2.25 2.25 0 1 1 1.5 0v.878a2.25 2.25 0 0 1-2.25 2.25h-1.5v2.128a2.251 2.251 0 1 1-1.5 0V8.5h-1.5A2.25 2.25 0 0 1 3.5 6.25v-.878a2.25 2.25 0 1 1 1.5 0ZM5 3.25a.75.75 0 1 0-1.5 0 .75.75 0 0 0 1.5 0Zm6.75.75a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5Zm-3 8.75a.75.75 0 1 0-1.5 0 .75.75 0 0 0 1.5 0Z"></path>
+                </svg>
+                <b>{ item.Forks }</b> Forks
+            </p>    
+            <p class="mt-1 text-xs leading-5 text-gray-500">
+                Last update at <time datetime="2023-01-23T13:23Z">{ item.UpdatedAt  }</time>
+            </p>
+        </div>
+    </li>
+  }
+
 </ul>
 
 <div class="container content-center">
-    <div class="flex items-center gap-8 mt-10">
-        <button disabled class="rounded-md border border-slate-300 p-2.5 text-center text-sm transition-all shadow-sm hover:shadow-lg text-slate-600 hover:text-white hover:bg-slate-800 hover:border-slate-800 focus:text-white focus:bg-slate-800 focus:border-slate-800 active:border-slate-800 active:text-white active:bg-slate-800 disabled:pointer-events-none disabled:opacity-50 disabled:shadow-none" type="button">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-4 h-4">
-            <path fill-rule="evenodd" d="M11.03 3.97a.75.75 0 0 1 0 1.06l-6.22 6.22H21a.75.75 0 0 1 0 1.5H4.81l6.22 6.22a.75.75 0 1 1-1.06 1.06l-7.5-7.5a.75.75 0 0 1 0-1.06l7.5-7.5a.75.75 0 0 1 1.06 0Z" clip-rule="evenodd" />
-            </svg>
-        </button>
+    <div class="flex items-center gap-8 mt-10 mb-25">
+        
+        if prevPage == -1 {
+            <button disabled class="rounded-md border border-slate-300 p-2.5 text-center text-sm transition-all shadow-sm hover:shadow-lg text-slate-600 hover:text-white hover:bg-slate-800 hover:border-slate-800 focus:text-white focus:bg-slate-800 focus:border-slate-800 active:border-slate-800 active:text-white active:bg-slate-800 disabled:pointer-events-none disabled:opacity-50 disabled:shadow-none" type="button">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-4 h-4">
+                    <path fill-rule="evenodd" d="M11.03 3.97a.75.75 0 0 1 0 1.06l-6.22 6.22H21a.75.75 0 0 1 0 1.5H4.81l6.22 6.22a.75.75 0 1 1-1.06 1.06l-7.5-7.5a.75.75 0 0 1 0-1.06l7.5-7.5a.75.75 0 0 1 1.06 0Z" clip-rule="evenodd" />
+                </svg>
+            </button>
+        } else {
+            <button onClick="window.scrollTo({top: 0,behavior: 'smooth'})" id="prev-page" data-prev-page={fmt.Sprintf("%d", prevPage)} class="rounded-md border border-slate-300 p-2.5 text-center text-sm transition-all shadow-sm hover:shadow-lg text-slate-600 hover:text-white hover:bg-slate-800 hover:border-slate-800 focus:text-white focus:bg-slate-800 focus:border-slate-800 active:border-slate-800 active:text-white active:bg-slate-800 disabled:pointer-events-none disabled:opacity-50 disabled:shadow-none"
+                    hx-get="http://localhost:3000/search"
+                    hx-vals='js:{
+                        "ownerType": ownerType,
+                        "ownerName": ownerName,
+                        "repoQuery": repoQuery,
+                        "page": document.getElementById("prev-page").dataset["prevPage"]
+                    }'
+                    hx-target="#searchResults"
+                    hx-swap="innerHTML scroll:top"
+                    hx-indicator="#search-loading"            
+            >
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-4 h-4">
+                    <path fill-rule="evenodd" d="M11.03 3.97a.75.75 0 0 1 0 1.06l-6.22 6.22H21a.75.75 0 0 1 0 1.5H4.81l6.22 6.22a.75.75 0 1 1-1.06 1.06l-7.5-7.5a.75.75 0 0 1 0-1.06l7.5-7.5a.75.75 0 0 1 1.06 0Z" clip-rule="evenodd" />
+                </svg>
+            </button>
+        }
+        
         
         <p class="text-slate-600">
-            Page <strong class="text-slate-800">1</strong> of&nbsp;<strong class="text-slate-800">10</strong>
+            Page <strong class="text-slate-800">{ fmt.Sprintf("%d", currentPage) }</strong> of&nbsp;<strong class="text-slate-800">{ fmt.Sprintf("%d", totalPages) }</strong>
         </p>
         
-        <button class="rounded-md border border-slate-300 p-2.5 text-center text-sm transition-all shadow-sm hover:shadow-lg text-slate-600 hover:text-white hover:bg-slate-800 hover:border-slate-800 focus:text-white focus:bg-slate-800 focus:border-slate-800 active:border-slate-800 active:text-white active:bg-slate-800 disabled:pointer-events-none disabled:opacity-50 disabled:shadow-none" type="button">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-4 h-4">
-            <path fill-rule="evenodd" d="M12.97 3.97a.75.75 0 0 1 1.06 0l7.5 7.5a.75.75 0 0 1 0 1.06l-7.5 7.5a.75.75 0 1 1-1.06-1.06l6.22-6.22H3a.75.75 0 0 1 0-1.5h16.19l-6.22-6.22a.75.75 0 0 1 0-1.06Z" clip-rule="evenodd" />
-            </svg>
-        </button>
+        if nextPage == -1 {
+            <button disabled class="rounded-md border border-slate-300 p-2.5 text-center text-sm transition-all shadow-sm hover:shadow-lg text-slate-600 hover:text-white hover:bg-slate-800 hover:border-slate-800 focus:text-white focus:bg-slate-800 focus:border-slate-800 active:border-slate-800 active:text-white active:bg-slate-800 disabled:pointer-events-none disabled:opacity-50 disabled:shadow-none" type="button">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-4 h-4">
+                    <path fill-rule="evenodd" d="M12.97 3.97a.75.75 0 0 1 1.06 0l7.5 7.5a.75.75 0 0 1 0 1.06l-7.5 7.5a.75.75 0 1 1-1.06-1.06l6.22-6.22H3a.75.75 0 0 1 0-1.5h16.19l-6.22-6.22a.75.75 0 0 1 0-1.06Z" clip-rule="evenodd" />
+                </svg>
+            </button>
+        } else {
+            <button onClick="window.scrollTo({top: 0,behavior: 'smooth'})" id="next-page" data-next-page={fmt.Sprintf("%d", nextPage)}  class="rounded-md border border-slate-300 p-2.5 text-center text-sm transition-all shadow-sm hover:shadow-lg text-slate-600 hover:text-white hover:bg-slate-800 hover:border-slate-800 focus:text-white focus:bg-slate-800 focus:border-slate-800 active:border-slate-800 active:text-white active:bg-slate-800 disabled:pointer-events-none disabled:opacity-50 disabled:shadow-none"
+                    hx-get="http://localhost:3000/search"
+                    hx-vals='js:{
+                        "ownerType": ownerType,
+                        "ownerName": ownerName,
+                        "repoQuery": repoQuery,
+                        "page": document.getElementById("next-page").dataset["nextPage"]
+                    }'
+                    hx-target="#searchResults"
+                    hx-swap="innerHTML scroll:top"
+                    hx-indicator="#search-loading"      
+            >
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-4 h-4">
+                    <path fill-rule="evenodd" d="M12.97 3.97a.75.75 0 0 1 1.06 0l7.5 7.5a.75.75 0 0 1 0 1.06l-7.5 7.5a.75.75 0 1 1-1.06-1.06l6.22-6.22H3a.75.75 0 0 1 0-1.5h16.19l-6.22-6.22a.75.75 0 0 1 0-1.06Z" clip-rule="evenodd" />
+                </svg>
+            </button>
+        }
     </div>
 </div>
 

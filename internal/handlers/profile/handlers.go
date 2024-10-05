@@ -24,9 +24,9 @@ func NewProfileHandlers(githubClient *githubapi.GithubApi) *ProfileHandlers {
 func (ph *ProfileHandlers) GetProfilePage(w http.ResponseWriter, r *http.Request) {
 	ph.Handle(w, r, func(w http.ResponseWriter, r *http.Request) {
 		t := r.Context().Value(middlewares.CookieAccessTokenKey)
-		token := t.(*http.Cookie)
+		token := t.(string)
 
-		githubData, _ := ph.githubClient.GetProfileInfo(token.Value)
+		githubData, _ := ph.githubClient.GetProfileInfo(token)
 
 		pages.ProfilePage(components.ProfileData{
 			Username:  githubData.Username,

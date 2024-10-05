@@ -5,11 +5,13 @@ import (
 	"log"
 	"net/http"
 
+	authentication "github.com/CristianCurteanu/gh-search/internal/auth"
 	"github.com/CristianCurteanu/gh-search/internal/handlers/auth"
 	"github.com/CristianCurteanu/gh-search/internal/handlers/profile"
 	"github.com/CristianCurteanu/gh-search/internal/handlers/repository"
 	"github.com/CristianCurteanu/gh-search/internal/middlewares"
 	"github.com/CristianCurteanu/gh-search/pkg/githubapi"
+	"github.com/redis/go-redis/v9"
 )
 
 const (
@@ -21,6 +23,13 @@ func main() {
 	mux := http.NewServeMux()
 	githubClient := githubapi.NewGithubClient(githubClientID, githubClientSecret)
 
+	redisSessionStorage := authentication.NewRedisSessionStorage(redis.NewClient(&redis.Options{
+		Addr:     "localhost:6379",
+		Password: "", // no password set
+		DB:       0,  // use default DB
+	}))
+	signer := authentication.NewJWTAuth(githubClientSecret)
+
 	authHandlers := auth.NewAuthHandlers(
 		auth.AuthHandlersConfig{
 			ClientId:     githubClientID,
@@ -28,6 +37,8 @@ func main() {
 			RedirectUrl:  "http://localhost:3000/auth/callback/success",
 		},
 		githubClient,
+		redisSessionStorage,
+		signer,
 	)
 	requestLog := middlewares.NewRequestLog()
 	authHandlers.Use(requestLog)
@@ -37,9 +48,8 @@ func main() {
 	mux.HandleFunc("/auth/callback/success", authHandlers.GithubCallbackHandler())
 
 	sessionMiddleware := middlewares.NewCookieSessionHandler(
-		func(w http.ResponseWriter, r *http.Request) {
-			http.Redirect(w, r, "/", http.StatusMovedPermanently)
-		},
+		redisSessionStorage,
+		signer,
 	)
 
 	profileHandlers := profile.NewProfileHandlers(githubClient)

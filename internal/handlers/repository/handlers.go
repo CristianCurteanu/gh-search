@@ -35,7 +35,7 @@ func (ph *RepositoriesHandlers) Search(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-type", "text/html")
 
 		t := r.Context().Value(middlewares.CookieAccessTokenKey)
-		token := t.(*http.Cookie)
+		token := t.(string)
 
 		ownerType := r.URL.Query().Get("ownerType")
 		ownerName := r.URL.Query().Get("ownerName")
@@ -71,7 +71,7 @@ func (ph *RepositoriesHandlers) Search(w http.ResponseWriter, r *http.Request) {
 		queryString = params.Encode()
 		fmt.Printf("queryString(): %v\n", queryString)
 
-		githubData, err := ph.githubClient.SearchRepository(token.Value, queryString)
+		githubData, err := ph.githubClient.SearchRepository(token, queryString)
 		if err != nil {
 			pages.NoResults("Repositories Not found").Render(r.Context(), w)
 			return
@@ -102,8 +102,9 @@ func (ph *RepositoriesHandlers) GetRepositoryPage(w http.ResponseWriter, r *http
 		w.Header().Set("Content-type", "text/html")
 
 		t := r.Context().Value(middlewares.CookieAccessTokenKey)
-		token := t.(*http.Cookie)
-		githubData, err := ph.githubClient.GetProfileInfo(token.Value)
+		token := t.(string)
+
+		githubData, err := ph.githubClient.GetProfileInfo(token)
 		if err != nil {
 			log.Printf("failed to get profile data, err=%q", err)
 			pages.WrappedNoResults(mapProfileData(githubData), "Failed to get profile data from Github").Render(r.Context(), w)
@@ -124,7 +125,7 @@ func (ph *RepositoriesHandlers) GetRepositoryPage(w http.ResponseWriter, r *http
 		}
 
 		repoData, err := ph.githubClient.GetRepositoryInfo(
-			token.Value,
+			token,
 			fmt.Sprintf("%s/%s", owner, repo),
 		)
 		if err != nil {
@@ -134,7 +135,7 @@ func (ph *RepositoriesHandlers) GetRepositoryPage(w http.ResponseWriter, r *http
 		}
 
 		commits, err := ph.githubClient.GetRepoCommits(
-			token.Value,
+			token,
 			fmt.Sprintf("%s/%s", owner, repo),
 		)
 		if err != nil {
@@ -144,7 +145,7 @@ func (ph *RepositoriesHandlers) GetRepositoryPage(w http.ResponseWriter, r *http
 		}
 
 		contributors, err := ph.githubClient.GetRepoContributors(
-			token.Value,
+			token,
 			fmt.Sprintf("%s/%s", owner, repo),
 		)
 		if err != nil {

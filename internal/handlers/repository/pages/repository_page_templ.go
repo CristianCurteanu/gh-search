@@ -140,7 +140,7 @@ func RepositoryDetailsPage(data RepositoryDetails) templ.Component {
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</span></li></ul></div></div><section class=\"flex flex-row flex-wrap m-8\"><input id=\"tab-one\" type=\"radio\" name=\"tabs\" class=\"peer/tab-one opacity-0 absolute\" checked> <label for=\"tab-one\" class=\"peer-checked/tab-one:border-b-4 border-slate-800 cursor-default p-4 block w-1/2\">Commits</label> <input id=\"tab-two\" type=\"radio\" name=\"tabs\" class=\"peer/tab-two opacity-0 absolute\"> <label for=\"tab-two\" class=\"peer-checked/tab-two:border-b-4 border-slate-800 cursor-default p-4 block w-1/2\">Contributors</label><div class=\"basis-full h-0\"></div><div class=\"hidden peer-checked/tab-one:block p-4 w-full\"><div class=\"relative flex flex-col\"><div class=\"absolute border-r-2 border-gray-200 bottom-1 top-1 dark:border-gray-800\" style=\"z-index: -1; left: 15px\"></div><ul>")
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</span></li></ul></div></div><section class=\"flex flex-row flex-wrap m-8\"><input id=\"tab-one\" type=\"radio\" name=\"tabs\" class=\"peer/tab-one opacity-0 absolute\" checked> <label for=\"tab-one\" class=\"peer-checked/tab-one:border-b-4 border-slate-800 cursor-default p-4 block w-1/2\">Commits</label> <input id=\"tab-two\" type=\"radio\" name=\"tabs\" class=\"peer/tab-two opacity-0 absolute\"> <label for=\"tab-two\" class=\"peer-checked/tab-two:border-b-4 border-slate-800 cursor-default p-4 block w-1/2\">Contributors</label><div class=\"basis-full h-0\"></div><div class=\"hidden peer-checked/tab-one:block p-4 w-11/12 \"><div class=\"relative flex flex-col overflow-y-auto\"><div class=\"absolute border-r-2 border-gray-200 bottom-1 top-1 dark:border-gray-800\" style=\"z-index: -1; left: 15px\"></div><ul>")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}
@@ -224,7 +224,7 @@ func RepositoryDetailsPage(data RepositoryDetails) templ.Component {
 					return templ_7745c5c3_Err
 				}
 			}
-			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</ul></div></div><div class=\"hidden peer-checked/tab-two:block p-4 w-full\"><div class=\"grid lg:grid-cols-5 sm:grid-col-2 md:grid-cols-2 gap-4\">")
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("</ul></div></div><div class=\"hidden peer-checked/tab-two:block p-4 w-11/12 \"><div class=\"grid lg:grid-cols-5 sm:grid-col-2 md:grid-cols-2 gap-4 overflow-y-auto\">")
 			if templ_7745c5c3_Err != nil {
 				return templ_7745c5c3_Err
 			}

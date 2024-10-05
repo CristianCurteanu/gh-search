@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/CristianCurteanu/gh-search/internal/components"
+	"github.com/CristianCurteanu/gh-search/internal/handlers/auth/pages"
 	"github.com/CristianCurteanu/gh-search/internal/middlewares"
 	"github.com/CristianCurteanu/gh-search/pkg/githubapi"
 )
@@ -28,9 +28,9 @@ func NewAuthHandlers(conf AuthHandlersConfig, githubClient *githubapi.GithubApi)
 }
 
 func (ah AuthHandlers) RootHandler(w http.ResponseWriter, r *http.Request) {
-	loginBtn := components.Login()
+	loginBtn := pages.Login()
 
-	components.LoginPage(loginBtn).Render(r.Context(), w)
+	pages.LoginPage(loginBtn).Render(r.Context(), w)
 }
 
 func (ah AuthHandlers) GithubLoginHandler(w http.ResponseWriter, r *http.Request) {

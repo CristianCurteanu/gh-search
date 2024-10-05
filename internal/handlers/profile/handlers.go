@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/CristianCurteanu/gh-search/internal/components"
+	"github.com/CristianCurteanu/gh-search/internal/handlers/profile/pages"
 	"github.com/CristianCurteanu/gh-search/internal/middlewares"
 	"github.com/CristianCurteanu/gh-search/pkg/githubapi"
 )
@@ -27,7 +28,7 @@ func (ph *ProfileHandlers) GetProfilePage(w http.ResponseWriter, r *http.Request
 
 		githubData, _ := ph.githubClient.GetProfileInfo(token.Value)
 
-		components.ProfilePage(components.ProfileData{
+		pages.ProfilePage(components.ProfileData{
 			Username:  githubData.Username,
 			Id:        githubData.Username,
 			AvatarURL: githubData.AvatarURL,

@@ -15,6 +15,10 @@ import (
 	"github.com/CristianCurteanu/gh-search/pkg/githubapi"
 )
 
+const (
+	DefaultAvatarURL = "https://avatars.githubusercontent.com/u/19864447?v=4"
+)
+
 type RepositoriesHandlers struct {
 	githubClient *githubapi.GithubApi
 	middlewares.UseMiddleware
@@ -28,10 +32,10 @@ func NewRepositoriesHandlers(githubClient *githubapi.GithubApi) *RepositoriesHan
 
 func (ph *RepositoriesHandlers) Search(w http.ResponseWriter, r *http.Request) {
 	ph.Handle(w, r, func(w http.ResponseWriter, r *http.Request) {
-		token, err := r.Cookie("access_token")
-		if err != nil {
-			panic(err)
-		}
+		w.Header().Set("Content-type", "text/html")
+
+		t := r.Context().Value(middlewares.CookieAccessTokenKey)
+		token := t.(*http.Cookie)
 
 		ownerType := r.URL.Query().Get("ownerType")
 		ownerName := r.URL.Query().Get("ownerName")
@@ -47,14 +51,12 @@ func (ph *RepositoriesHandlers) Search(w http.ResponseWriter, r *http.Request) {
 		if ownerType != "" && ownerName != "" {
 			queryStringBuf.WriteString(fmt.Sprintf("%s:%s ", ownerType, ownerName))
 		} else if ownerType != "" && ownerName == "" {
-			w.Header().Set("Content-type", "text/html")
-			components.NoResults("If you want to search using an owner type, specify the owner type").Render(r.Context(), w)
+			pages.NoResults("If you want to search using an owner type, specify the owner type").Render(r.Context(), w)
 			return
 		}
 
 		if repoQuery == "" {
-			w.Header().Set("Content-type", "text/html")
-			components.NoResults("Please, use set a repo query").Render(r.Context(), w)
+			pages.NoResults("Please, use set a repo query").Render(r.Context(), w)
 			return
 		}
 
@@ -71,16 +73,9 @@ func (ph *RepositoriesHandlers) Search(w http.ResponseWriter, r *http.Request) {
 
 		githubData, err := ph.githubClient.SearchRepository(token.Value, queryString)
 		if err != nil {
-			w.Header().Set("Content-type", "text/html")
-			components.NoResults("Repositories Not found").Render(r.Context(), w)
+			pages.NoResults("Repositories Not found").Render(r.Context(), w)
 			return
 		}
-
-		w.Header().Set("Content-type", "text/html")
-		// var res []components.Repository = make([]components.Repository, 0, len(githubData.Items))
-		// for _, repo := range githubData.Items {
-		// 	res = append(res, components.Repository(mapRepository(repo)))
-		// }
 
 		currentPage, _ := strconv.Atoi(page)
 		prevPage := currentPage - 1
@@ -96,7 +91,7 @@ func (ph *RepositoriesHandlers) Search(w http.ResponseWriter, r *http.Request) {
 			total += 1
 		}
 
-		components.SearchResult(mapStruct(githubData.Items, func(rd *githubapi.Repository) components.Repository {
+		pages.SearchResult(mapStruct(githubData.Items, func(rd *githubapi.Repository) components.Repository {
 			return mapRepository(*rd)
 		}), prevPage, currentPage, nextPage, total).Render(r.Context(), w)
 	})
@@ -111,7 +106,7 @@ func (ph *RepositoriesHandlers) GetRepositoryPage(w http.ResponseWriter, r *http
 		githubData, err := ph.githubClient.GetProfileInfo(token.Value)
 		if err != nil {
 			log.Printf("failed to get profile data, err=%q", err)
-			components.WrappedNoResults(mapProfileData(githubData), "Failed to get profile data from Github").Render(r.Context(), w)
+			pages.WrappedNoResults(mapProfileData(githubData), "Failed to get profile data from Github").Render(r.Context(), w)
 			return
 		}
 
@@ -119,12 +114,12 @@ func (ph *RepositoriesHandlers) GetRepositoryPage(w http.ResponseWriter, r *http
 		repo := r.URL.Query().Get("repo")
 
 		if owner == "" {
-			components.WrappedNoResults(mapProfileData(githubData), "Please, define owner, it's empty now").Render(r.Context(), w)
+			pages.WrappedNoResults(mapProfileData(githubData), "Please, define owner, it's empty now").Render(r.Context(), w)
 			return
 		}
 
 		if repo == "" {
-			components.WrappedNoResults(mapProfileData(githubData), "Please, define repository, it's empty now").Render(r.Context(), w)
+			pages.WrappedNoResults(mapProfileData(githubData), "Please, define repository, it's empty now").Render(r.Context(), w)
 			return
 		}
 
@@ -134,7 +129,7 @@ func (ph *RepositoriesHandlers) GetRepositoryPage(w http.ResponseWriter, r *http
 		)
 		if err != nil {
 			log.Printf("failed to get repository info, err=%q", err)
-			components.WrappedNoResults(mapProfileData(githubData), "Failed to get repository data").Render(r.Context(), w)
+			pages.WrappedNoResults(mapProfileData(githubData), "Failed to get repository data").Render(r.Context(), w)
 			return
 		}
 
@@ -144,7 +139,7 @@ func (ph *RepositoriesHandlers) GetRepositoryPage(w http.ResponseWriter, r *http
 		)
 		if err != nil {
 			log.Printf("failed to get repository info, err=%q", err)
-			components.WrappedNoResults(mapProfileData(githubData), "Failed to get repository commits data").Render(r.Context(), w)
+			pages.WrappedNoResults(mapProfileData(githubData), "Failed to get repository commits data").Render(r.Context(), w)
 			return
 		}
 
@@ -154,7 +149,7 @@ func (ph *RepositoriesHandlers) GetRepositoryPage(w http.ResponseWriter, r *http
 		)
 		if err != nil {
 			log.Printf("failed to get repository info, err=%q", err)
-			components.WrappedNoResults(mapProfileData(githubData), "Failed to get repository commits data").Render(r.Context(), w)
+			pages.WrappedNoResults(mapProfileData(githubData), "Failed to get repository commits data").Render(r.Context(), w)
 			return
 		}
 
@@ -188,7 +183,9 @@ func mapCommit(commit githubapi.Commit) pages.Commit {
 	if commit.Author != nil {
 		res.AuthorAvatar = commit.Author.AvatarURL
 	} else if commit.Commiter != nil {
-		res.AuthorAvatar = commit.Author.AvatarURL
+		res.AuthorAvatar = commit.Commiter.AvatarURL
+	} else {
+		res.AuthorAvatar = DefaultAvatarURL
 	}
 
 	return res

@@ -84,8 +84,8 @@ templ RepositoryDetailsPage(data RepositoryDetails) {
 
         <div class="basis-full h-0"></div>
 
-        <div class="hidden peer-checked/tab-one:block p-4 w-full">
-            <div class="relative flex flex-col">
+        <div class="hidden peer-checked/tab-one:block p-4 w-11/12 ">
+            <div class="relative flex flex-col overflow-y-auto">
             <div
                 class="absolute border-r-2 border-gray-200 bottom-1 top-1 dark:border-gray-800"
                 style="z-index: -1; left: 15px"
@@ -114,8 +114,8 @@ templ RepositoryDetailsPage(data RepositoryDetails) {
             </ul>
             </div>
         </div>
-        <div class="hidden peer-checked/tab-two:block p-4 w-full">
-            <div class="grid lg:grid-cols-5 sm:grid-col-2 md:grid-cols-2 gap-4">
+        <div class="hidden peer-checked/tab-two:block p-4 w-11/12 ">
+            <div class="grid lg:grid-cols-5 sm:grid-col-2 md:grid-cols-2 gap-4 overflow-y-auto">
                 for _, item := range data.Contributors {
                 <div class="flex flex-col bg-white shadow-sm h-45 border border-slate-200 rounded-lg my-6">
                     <div class="m-4 overflow-hidden rounded-md flex justify-center items-center">

@@ -1,0 +1,18 @@
+package pages
+
+import 	"github.com/CristianCurteanu/gh-search/internal/components"
+
+
+templ LoginPage(contents templ.Component) {
+    @components.RootLayout() {
+        <div class="w-full p-4 bg-gradient-to-br from-slate-500 to-slate-800">
+            <main role="main" class="w-full flex flex-col h-screen content-center justify-center">
+                <div class="m-auto">
+                    <div class="shadow-lg relative flex flex-col bg-white shadow-sm border border-slate-200 w-96 rounded-lg my-6">
+                        @contents
+                    </div>
+                </div>
+            </main>
+        </div>
+    }
+}

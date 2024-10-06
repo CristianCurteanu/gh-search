@@ -8,11 +8,11 @@ package pages
 import "github.com/a-h/templ"
 import templruntime "github.com/a-h/templ/runtime"
 
-import "github.com/CristianCurteanu/gh-search/internal/components"
+import "github.com/CristianCurteanu/gh-search/internal/layouts"
 
 type RepositoryDetails struct {
-	Profile      components.ProfileData
-	Repo         components.Repository
+	Profile      layouts.ProfileData
+	Repo         layouts.Repository
 	Contributors []Contributor
 	Commits      []Commit
 }
@@ -284,7 +284,7 @@ func RepositoryDetailsPage(data RepositoryDetails) templ.Component {
 			}
 			return templ_7745c5c3_Err
 		})
-		templ_7745c5c3_Err = components.ProfileLayout(data.Profile).Render(templ.WithChildren(ctx, templ_7745c5c3_Var2), templ_7745c5c3_Buffer)
+		templ_7745c5c3_Err = layouts.ProfileLayout(data.Profile).Render(templ.WithChildren(ctx, templ_7745c5c3_Var2), templ_7745c5c3_Buffer)
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

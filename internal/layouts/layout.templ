@@ -1,4 +1,4 @@
-package components
+package layouts
 
 
 templ RootLayout() {
@@ -79,8 +79,7 @@ templ ProfileLayout(data ProfileData) {
     }
 }
 
-
-
+// Leaving this here, as otherwise it's cause circular dependencies between profile and repository packagies
 type Repository struct {               
 	Name        string       
 	FullName    string       

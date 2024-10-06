@@ -4,12 +4,14 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 
 	authentication "github.com/CristianCurteanu/gh-search/internal/auth"
 	"github.com/CristianCurteanu/gh-search/internal/handlers/auth"
 	"github.com/CristianCurteanu/gh-search/internal/handlers/profile"
 	"github.com/CristianCurteanu/gh-search/internal/handlers/repository"
 	"github.com/CristianCurteanu/gh-search/internal/middlewares"
+	"github.com/CristianCurteanu/gh-search/pkg/cache"
 	"github.com/CristianCurteanu/gh-search/pkg/githubapi"
 	"github.com/redis/go-redis/v9"
 )
@@ -23,11 +25,9 @@ func main() {
 	mux := http.NewServeMux()
 	githubClient := githubapi.NewGithubClient(githubClientID, githubClientSecret)
 
-	redisSessionStorage := authentication.NewRedisSessionStorage(redis.NewClient(&redis.Options{
-		Addr:     "localhost:6379",
-		Password: "", // no password set
-		DB:       0,  // use default DB
-	}))
+	redisSessionStorage := authentication.NewRedisSessionStorage(
+		newRedisClient(authentication.RedisDBSessionStorage),
+	)
 	signer := authentication.NewJWTAuth(githubClientSecret)
 
 	authHandlers := auth.NewAuthHandlers(
@@ -52,22 +52,51 @@ func main() {
 		signer,
 	)
 
-	profileHandlers := profile.NewProfileHandlers(githubClient)
+	dataCache := cache.NewRedisCache(newRedisClient(2))
+	profileHandlers := profile.NewProfileHandlers(
+		githubClient,
+		dataCache,
+	)
 	profileHandlers.Use(requestLog)
 	profileHandlers.Use(sessionMiddleware)
-	// Route where the authenticated user is redirected to
+
 	mux.HandleFunc("/profile", profileHandlers.GetProfilePage)
 	mux.HandleFunc("/logout", profileHandlers.Logout)
 
-	repositories := repository.NewRepositoriesHandlers(githubClient)
-	profileHandlers.Use(requestLog)
+	repositories := repository.NewRepositoriesHandlers(githubClient, dataCache)
+	repositories.Use(requestLog)
 	repositories.Use(sessionMiddleware)
-	mux.HandleFunc("/search", repositories.Search)
 
+	mux.HandleFunc("/search", repositories.Search)
 	mux.HandleFunc("/repository", repositories.GetRepositoryPage)
 
 	fmt.Println("[ UP ON PORT 3000 ]")
 	log.Panic(
 		http.ListenAndServe(":3000", mux),
 	)
+}
+
+func newRedisClient(db int) *redis.Client {
+	redisHost, found := os.LookupEnv("REDIS_HOST")
+	if !found {
+		panic("REDIS_HOST not defined")
+	}
+
+	redisPort, found := os.LookupEnv("REDIS_PORT")
+	if !found {
+		panic("REDIS_PORT not defined")
+	}
+
+	redisPassword, found := os.LookupEnv("REDIS_PASSWORD")
+	if !found {
+		panic("REDIS_PASSWORD not defined")
+	}
+
+	redisAddr := fmt.Sprintf("%s:%s", redisHost, redisPort)
+
+	return redis.NewClient(&redis.Options{
+		Addr:     redisAddr,
+		Password: redisPassword,
+		DB:       db,
+	})
 }

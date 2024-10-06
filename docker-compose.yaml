@@ -1,0 +1,38 @@
+version: '3.9'
+
+services:
+  cache:
+    image: redis:latest
+    restart: always
+    ports:
+      - '6379:6379'
+    volumes:
+      - cache:/data
+    environment:
+      - REDIS_PORT=6379
+      - REDIS_DATABASES=5
+      - REDIS_PASSWORD=eYVX7EwVmmxKPCDmwMtyKVge8oLd2t81
+
+  server:
+    restart: always
+    build:
+      dockerfile: Dockerfile
+      context: .
+    expose:
+      - "3000"
+    ports:
+      - "3000:3000"
+    stdin_open: true
+    tty: true
+    depends_on:
+      - cache
+    volumes:
+      - ~/redis/cache:/src/_cache
+    environment:
+      REDIS_HOST: cache
+      REDIS_PORT: 6379
+      REDIS_PASSWORD: eYVX7EwVmmxKPCDmwMtyKVge8oLd2t81
+
+volumes:
+  cache:
+    driver: local

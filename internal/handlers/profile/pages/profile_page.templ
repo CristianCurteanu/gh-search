@@ -1,9 +1,9 @@
 package pages
 
-import 	"github.com/CristianCurteanu/gh-search/internal/components"
+import 	"github.com/CristianCurteanu/gh-search/internal/layouts"
 
-templ ProfilePage(data components.ProfileData) {
-    @components.ProfileLayout(data) {
+templ ProfilePage(data layouts.ProfileData) {
+    @layouts.ProfileLayout(data) {
     // <form></form>
         <div class="w-full min-w-[200px] mt-4">
             <label class="block mb-1 text-sm text-slate-600">

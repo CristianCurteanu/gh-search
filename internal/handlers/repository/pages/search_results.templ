@@ -2,7 +2,7 @@ package pages
 
 import (
     "fmt"
-    "github.com/CristianCurteanu/gh-search/internal/components"
+    "github.com/CristianCurteanu/gh-search/internal/layouts"
 )
 
 templ NoResults(message string) {
@@ -19,15 +19,50 @@ templ NoResults(message string) {
     </div>
 }
 
-templ WrappedNoResults(data components.ProfileData, message string) {
-    @components.ProfileLayout(data) {
+templ WrappedNoResults(data layouts.ProfileData, message string) {
+    @layouts.ProfileLayout(data) {
         @NoResults(message)
     }
 }
 
-templ SearchResult(items []components.Repository, prevPage int, currentPage int, nextPage int, totalPages int) {
+type SearchResultsData struct {
+    Items []layouts.Repository
+    CurrentPage int
+    TotalPages int
+}
+
+func (srd SearchResultsData) GetPrevPage() int {
+    prevPage := srd.CurrentPage - 1
+    if prevPage <= 0 {
+        prevPage = -1
+    }
+
+    return prevPage
+}
+
+func (srd SearchResultsData) GetNextPage() int {
+    nextPage := srd.CurrentPage + 1
+    if nextPage >= srd.GetTotalPages() {
+        nextPage = -1
+    }
+
+    return nextPage
+}
+
+func (srd SearchResultsData) GetTotalPages() int {
+    total := srd.TotalPages / 30
+    if srd.TotalPages%30 != 0 {
+        total += 1
+    }
+    
+    return total
+}
+
+
+
+templ SearchResult(data SearchResultsData) {
 <ul role="list" class="divide-y divide-gray-100 mt-10 mr-75 md:mr-5 sm:mr-1">
-  for _, item := range items {
+  for _, item := range data.Items {
     <li class="flex justify-between gap-x-6 py-5">
         <div class="flex min-w-0 gap-x-4">
             <img class="h-12 w-12 flex-none rounded-full bg-gray-50" src={ item.OwnerAvatar } alt="">
@@ -63,14 +98,14 @@ templ SearchResult(items []components.Repository, prevPage int, currentPage int,
 <div class="container content-center">
     <div class="flex items-center gap-8 mt-10 mb-25">
         
-        if prevPage == -1 {
+        if data.GetPrevPage() == -1 {
             <button disabled class="rounded-md border border-slate-300 p-2.5 text-center text-sm transition-all shadow-sm hover:shadow-lg text-slate-600 hover:text-white hover:bg-slate-800 hover:border-slate-800 focus:text-white focus:bg-slate-800 focus:border-slate-800 active:border-slate-800 active:text-white active:bg-slate-800 disabled:pointer-events-none disabled:opacity-50 disabled:shadow-none" type="button">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-4 h-4">
                     <path fill-rule="evenodd" d="M11.03 3.97a.75.75 0 0 1 0 1.06l-6.22 6.22H21a.75.75 0 0 1 0 1.5H4.81l6.22 6.22a.75.75 0 1 1-1.06 1.06l-7.5-7.5a.75.75 0 0 1 0-1.06l7.5-7.5a.75.75 0 0 1 1.06 0Z" clip-rule="evenodd" />
                 </svg>
             </button>
         } else {
-            <button onClick="window.scrollTo({top: 0,behavior: 'smooth'})" id="prev-page" data-prev-page={fmt.Sprintf("%d", prevPage)} class="rounded-md border border-slate-300 p-2.5 text-center text-sm transition-all shadow-sm hover:shadow-lg text-slate-600 hover:text-white hover:bg-slate-800 hover:border-slate-800 focus:text-white focus:bg-slate-800 focus:border-slate-800 active:border-slate-800 active:text-white active:bg-slate-800 disabled:pointer-events-none disabled:opacity-50 disabled:shadow-none"
+            <button onClick="window.scrollTo({top: 0,behavior: 'smooth'})" id="prev-page" data-prev-page={fmt.Sprintf("%d", data.GetPrevPage())} class="rounded-md border border-slate-300 p-2.5 text-center text-sm transition-all shadow-sm hover:shadow-lg text-slate-600 hover:text-white hover:bg-slate-800 hover:border-slate-800 focus:text-white focus:bg-slate-800 focus:border-slate-800 active:border-slate-800 active:text-white active:bg-slate-800 disabled:pointer-events-none disabled:opacity-50 disabled:shadow-none"
                     hx-get="http://localhost:3000/search"
                     hx-vals='js:{
                         "ownerType": ownerType,
@@ -88,19 +123,22 @@ templ SearchResult(items []components.Repository, prevPage int, currentPage int,
             </button>
         }
         
-        
         <p class="text-slate-600">
-            Page <strong class="text-slate-800">{ fmt.Sprintf("%d", currentPage) }</strong> of&nbsp;<strong class="text-slate-800">{ fmt.Sprintf("%d", totalPages) }</strong>
+            if data.GetTotalPages() == 0 {
+                Page <strong class="text-slate-800">{ fmt.Sprintf("%d", data.CurrentPage) }</strong>
+            } else {
+                Page <strong class="text-slate-800">{ fmt.Sprintf("%d", data.CurrentPage) }</strong> of&nbsp;<strong class="text-slate-800">{ fmt.Sprintf("%d", data.GetTotalPages()) }</strong>        
+            }
         </p>
         
-        if nextPage == -1 {
+        if data.GetNextPage() == -1 {
             <button disabled class="rounded-md border border-slate-300 p-2.5 text-center text-sm transition-all shadow-sm hover:shadow-lg text-slate-600 hover:text-white hover:bg-slate-800 hover:border-slate-800 focus:text-white focus:bg-slate-800 focus:border-slate-800 active:border-slate-800 active:text-white active:bg-slate-800 disabled:pointer-events-none disabled:opacity-50 disabled:shadow-none" type="button">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-4 h-4">
                     <path fill-rule="evenodd" d="M12.97 3.97a.75.75 0 0 1 1.06 0l7.5 7.5a.75.75 0 0 1 0 1.06l-7.5 7.5a.75.75 0 1 1-1.06-1.06l6.22-6.22H3a.75.75 0 0 1 0-1.5h16.19l-6.22-6.22a.75.75 0 0 1 0-1.06Z" clip-rule="evenodd" />
                 </svg>
             </button>
         } else {
-            <button onClick="window.scrollTo({top: 0,behavior: 'smooth'})" id="next-page" data-next-page={fmt.Sprintf("%d", nextPage)}  class="rounded-md border border-slate-300 p-2.5 text-center text-sm transition-all shadow-sm hover:shadow-lg text-slate-600 hover:text-white hover:bg-slate-800 hover:border-slate-800 focus:text-white focus:bg-slate-800 focus:border-slate-800 active:border-slate-800 active:text-white active:bg-slate-800 disabled:pointer-events-none disabled:opacity-50 disabled:shadow-none"
+            <button onClick="window.scrollTo({top: 0,behavior: 'smooth'})" id="next-page" data-next-page={fmt.Sprintf("%d", data.GetNextPage())}  class="rounded-md border border-slate-300 p-2.5 text-center text-sm transition-all shadow-sm hover:shadow-lg text-slate-600 hover:text-white hover:bg-slate-800 hover:border-slate-800 focus:text-white focus:bg-slate-800 focus:border-slate-800 active:border-slate-800 active:text-white active:bg-slate-800 disabled:pointer-events-none disabled:opacity-50 disabled:shadow-none"
                     hx-get="http://localhost:3000/search"
                     hx-vals='js:{
                         "ownerType": ownerType,

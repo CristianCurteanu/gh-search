@@ -1,18 +1,19 @@
 package repository
 
 import (
-	"bytes"
 	"fmt"
 	"log"
 	"net/http"
-	"net/url"
 	"strconv"
 	"time"
 
-	"github.com/CristianCurteanu/gh-search/internal/components"
+	"github.com/CristianCurteanu/gh-search/internal/handlers/profile/utils"
 	"github.com/CristianCurteanu/gh-search/internal/handlers/repository/pages"
+	"github.com/CristianCurteanu/gh-search/internal/layouts"
 	"github.com/CristianCurteanu/gh-search/internal/middlewares"
+	"github.com/CristianCurteanu/gh-search/pkg/cache"
 	"github.com/CristianCurteanu/gh-search/pkg/githubapi"
+	"github.com/CristianCurteanu/gh-search/pkg/slices"
 )
 
 const (
@@ -21,12 +22,17 @@ const (
 
 type RepositoriesHandlers struct {
 	githubClient *githubapi.GithubApi
+	cache        cache.Cache
+	svc          service
+
 	middlewares.UseMiddleware
 }
 
-func NewRepositoriesHandlers(githubClient *githubapi.GithubApi) *RepositoriesHandlers {
+func NewRepositoriesHandlers(githubClient *githubapi.GithubApi, cache cache.Cache) *RepositoriesHandlers {
 	return &RepositoriesHandlers{
 		githubClient: githubClient,
+		cache:        cache,
+		svc:          service{githubClient, cache},
 	}
 }
 
@@ -37,63 +43,20 @@ func (ph *RepositoriesHandlers) Search(w http.ResponseWriter, r *http.Request) {
 		t := r.Context().Value(middlewares.CookieAccessTokenKey)
 		token := t.(string)
 
-		ownerType := r.URL.Query().Get("ownerType")
-		ownerName := r.URL.Query().Get("ownerName")
-		repoQuery := r.URL.Query().Get("repoQuery")
-
-		page := r.URL.Query().Get("page")
-		if page == "" {
-			page = "1"
-		}
-
-		var queryStringBuf bytes.Buffer
-
-		if ownerType != "" && ownerName != "" {
-			queryStringBuf.WriteString(fmt.Sprintf("%s:%s ", ownerType, ownerName))
-		} else if ownerType != "" && ownerName == "" {
-			pages.NoResults("If you want to search using an owner type, specify the owner type").Render(r.Context(), w)
-			return
-		}
-
-		if repoQuery == "" {
-			pages.NoResults("Please, use set a repo query").Render(r.Context(), w)
-			return
-		}
-
-		queryStringBuf.WriteString(repoQuery)
-		queryString := queryStringBuf.String()
-
-		params := url.Values{}
-		params.Add("q", queryString)
-		params.Add("type", "repositories")
-		params.Add("page", page)
-
-		queryString = params.Encode()
-		fmt.Printf("queryString(): %v\n", queryString)
-
-		githubData, err := ph.githubClient.SearchRepository(token, queryString)
+		searchResults, page, err := ph.svc.searchRepositories(r.Context(), token, r.URL.Query())
 		if err != nil {
-			pages.NoResults("Repositories Not found").Render(r.Context(), w)
+			pages.NoResults(err.Error()).Render(r.Context(), w)
 			return
 		}
 
 		currentPage, _ := strconv.Atoi(page)
-		prevPage := currentPage - 1
-		if prevPage <= 0 {
-			prevPage = -1
-		}
-		nextPage := currentPage + 1
-		if nextPage >= githubData.Total {
-			nextPage = -1
-		}
-		total := githubData.Total / 30
-		if githubData.Total%30 != 0 {
-			total += 1
-		}
-
-		pages.SearchResult(mapStruct(githubData.Items, func(rd *githubapi.Repository) components.Repository {
-			return mapRepository(*rd)
-		}), prevPage, currentPage, nextPage, total).Render(r.Context(), w)
+		pages.SearchResult(pages.SearchResultsData{
+			Items: slices.MapSlice(searchResults.Items, func(rd *githubapi.Repository) layouts.Repository {
+				return mapRepository(*rd)
+			}),
+			CurrentPage: currentPage,
+			TotalPages:  searchResults.Total,
+		}).Render(r.Context(), w)
 	})
 }
 
@@ -104,72 +67,26 @@ func (ph *RepositoriesHandlers) GetRepositoryPage(w http.ResponseWriter, r *http
 		t := r.Context().Value(middlewares.CookieAccessTokenKey)
 		token := t.(string)
 
-		githubData, err := ph.githubClient.GetProfileInfo(token)
+		profileData, err := utils.GetProfileData(r.Context(), token, ph.githubClient, ph.cache)
 		if err != nil {
 			log.Printf("failed to get profile data, err=%q", err)
-			pages.WrappedNoResults(mapProfileData(githubData), "Failed to get profile data from Github").Render(r.Context(), w)
+			pages.WrappedNoResults(mapProfileData(profileData), "Failed to get profile data from Github").Render(r.Context(), w)
 			return
 		}
 
-		owner := r.URL.Query().Get("owner")
-		repo := r.URL.Query().Get("repo")
-
-		if owner == "" {
-			pages.WrappedNoResults(mapProfileData(githubData), "Please, define owner, it's empty now").Render(r.Context(), w)
-			return
-		}
-
-		if repo == "" {
-			pages.WrappedNoResults(mapProfileData(githubData), "Please, define repository, it's empty now").Render(r.Context(), w)
-			return
-		}
-
-		repoData, err := ph.githubClient.GetRepositoryInfo(
-			token,
-			fmt.Sprintf("%s/%s", owner, repo),
-		)
+		repoDetails, err := ph.svc.getRepoDetails(r.Context(), token, r.URL.Query())
 		if err != nil {
-			log.Printf("failed to get repository info, err=%q", err)
-			pages.WrappedNoResults(mapProfileData(githubData), "Failed to get repository data").Render(r.Context(), w)
-			return
-		}
-
-		commits, err := ph.githubClient.GetRepoCommits(
-			token,
-			fmt.Sprintf("%s/%s", owner, repo),
-		)
-		if err != nil {
-			log.Printf("failed to get repository info, err=%q", err)
-			pages.WrappedNoResults(mapProfileData(githubData), "Failed to get repository commits data").Render(r.Context(), w)
-			return
-		}
-
-		contributors, err := ph.githubClient.GetRepoContributors(
-			token,
-			fmt.Sprintf("%s/%s", owner, repo),
-		)
-		if err != nil {
-			log.Printf("failed to get repository info, err=%q", err)
-			pages.WrappedNoResults(mapProfileData(githubData), "Failed to get repository commits data").Render(r.Context(), w)
+			pages.WrappedNoResults(mapProfileData(profileData), err.Error()).Render(r.Context(), w)
 			return
 		}
 
 		pages.RepositoryDetailsPage(pages.RepositoryDetails{
-			Profile:      mapProfileData(githubData),
-			Repo:         mapRepository(repoData),
-			Commits:      mapStruct(commits, mapCommit),
-			Contributors: mapStruct(contributors, mapContributors),
+			Profile:      mapProfileData(profileData),
+			Repo:         mapRepository(repoDetails.repoData),
+			Commits:      slices.MapSlice(repoDetails.commits, mapCommit),
+			Contributors: slices.MapSlice(repoDetails.contributors, mapContributors),
 		}).Render(r.Context(), w)
 	})
-}
-
-func mapStruct[I any, O any](input []I, cb func(I) O) []O {
-	var output []O = make([]O, 0, len(input))
-	for _, i := range input {
-		output = append(output, cb(i))
-	}
-
-	return output
 }
 
 func mapCommit(commit githubapi.Commit) pages.Commit {
@@ -200,8 +117,8 @@ func mapContributors(c githubapi.Contributor) pages.Contributor {
 	}
 }
 
-func mapRepository(repo githubapi.Repository) components.Repository {
-	return components.Repository{
+func mapRepository(repo githubapi.Repository) layouts.Repository {
+	return layouts.Repository{
 		Name:        repo.Name,
 		FullName:    repo.FullName,
 		Description: repo.Description,
@@ -216,8 +133,8 @@ func mapRepository(repo githubapi.Repository) components.Repository {
 	}
 }
 
-func mapProfileData(githubData githubapi.ProfileData) components.ProfileData {
-	return components.ProfileData{
+func mapProfileData(githubData githubapi.ProfileData) layouts.ProfileData {
+	return layouts.ProfileData{
 		Username:  githubData.Username,
 		Id:        githubData.Username,
 		AvatarURL: githubData.AvatarURL,

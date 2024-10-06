@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/CristianCurteanu/gh-search/internal/httpclient"
+	"github.com/CristianCurteanu/gh-search/pkg/httpclient"
 )
 
 type HTTPClient interface {

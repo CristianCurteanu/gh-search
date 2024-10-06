@@ -1,11 +1,11 @@
 package pages
 
 
-import 	"github.com/CristianCurteanu/gh-search/internal/components"
+import 	"github.com/CristianCurteanu/gh-search/internal/layouts"
 
 type RepositoryDetails struct {
-    Profile components.ProfileData
-    Repo components.Repository
+    Profile layouts.ProfileData
+    Repo layouts.Repository
     Contributors []Contributor
     Commits []Commit 
 }
@@ -27,7 +27,7 @@ type Commit struct {
 }
 
 templ RepositoryDetailsPage(data RepositoryDetails) {
-    @components.ProfileLayout(data.Profile) {
+    @layouts.ProfileLayout(data.Profile) {
 <div class="w-full">
     <div class="my-6 lg:my-12 container px-6 mx-auto flex flex-col md:flex-row items-start md:items-center justify-between pb-4 border-b border-gray-300">
         <div>

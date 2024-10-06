@@ -5,9 +5,13 @@ import (
 	"context"
 	"encoding/gob"
 	"fmt"
-	"log"
+	"time"
 
 	"github.com/redis/go-redis/v9"
+)
+
+const (
+	RedisDBSessionStorage = 1
 )
 
 type RedisSessionStorage struct {
@@ -23,10 +27,11 @@ func (rss *RedisSessionStorage) StoreSession(ctx context.Context, key string, s 
 	enc := gob.NewEncoder(&buf)
 
 	if err := enc.Encode(s); err != nil {
-		log.Fatal(err)
+		return err
 	}
 
-	cmd := rss.client.Set(ctx, key, buf.Bytes(), 0)
+	ttl := s.ExpiresAt.Sub(time.Now().UTC())
+	cmd := rss.client.Set(ctx, key, buf.Bytes(), ttl)
 
 	return cmd.Err()
 }

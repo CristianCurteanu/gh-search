@@ -17,7 +17,16 @@ type service struct {
 	cache        cache.Cache
 }
 
-func (s service) searchRepositories(ctx context.Context, accessToken string, query url.Values) (githubapi.RepositorySearchResult, string, error) {
+func encodedSearchQueryString(q, page string) string {
+	params := url.Values{}
+	params.Add("q", q)
+	params.Add("type", "repositories")
+	params.Add("page", page)
+
+	return params.Encode()
+}
+
+func prepareQueryString(query url.Values) (string, string, error) {
 	ownerType := query.Get("ownerType")
 	ownerName := query.Get("ownerName")
 	repoQuery := query.Get("repoQuery")
@@ -28,31 +37,34 @@ func (s service) searchRepositories(ctx context.Context, accessToken string, que
 	}
 
 	var queryStringBuf bytes.Buffer
-	var res githubapi.RepositorySearchResult
 
 	if ownerType != "" && ownerName != "" {
 		queryStringBuf.WriteString(fmt.Sprintf("%s:%s ", ownerType, ownerName))
 	} else if ownerType != "" && ownerName == "" {
-		return res, page, errors.New("If you want to search using an owner type, specify the owner type")
+		return "", page, errors.New("If you want to search using an owner type, specify the owner type")
 	}
 
 	if repoQuery == "" {
-		return res, page, errors.New("Please, use set a repo query")
+		return "", page, errors.New("Please, use set a repo query")
 	}
 
 	queryStringBuf.WriteString(repoQuery)
-	queryString := queryStringBuf.String()
+	return queryStringBuf.String(), page, nil
+}
 
-	params := url.Values{}
-	params.Add("q", queryString)
-	params.Add("type", "repositories")
-	params.Add("page", page)
+func (s service) searchRepositories(ctx context.Context, accessToken string, query url.Values) (githubapi.RepositorySearchResult, string, error) {
+	var err error
+	var res githubapi.RepositorySearchResult
 
-	queryString = params.Encode()
+	queryString, page, err := prepareQueryString(query)
+	if err != nil {
+		return res, page, err
+	}
+	queryString = encodedSearchQueryString(queryString, page)
 
 	key := fmt.Sprintf("%s:%s", accessToken, queryString)
 	var searchResults githubapi.RepositorySearchResult
-	var err error
+
 	if s.cache.Exists(ctx, key) {
 		err := s.cache.Get(ctx, key, &searchResults)
 		if err != nil {

@@ -2,6 +2,26 @@ package pages
 
 import 	"github.com/CristianCurteanu/gh-search/internal/layouts"
 
+templ NoResults(message string) {
+    <div class="container p-32">
+        <img alt="Mona looking through a globe hologram for code" 
+             src="https://github.com/images/modules/search/light.png" 
+             srcset="https://github.com/images/modules/search/light.png 1x, https://github.com/images/modules/search/light2x.png 2x" 
+             style="display: block;">
+        <div class="container content-center mt-20">
+            <h2 class="text-lg font-bold ml-35">
+                { message }
+            </h2>
+        </div>
+    </div>
+}
+
+templ WrappedNoResults(data layouts.ProfileData, message string) {
+    @layouts.ProfileLayout(data) {
+        @NoResults(message)
+    }
+}
+
 templ ProfilePage(data layouts.ProfileData) {
     @layouts.ProfileLayout(data) {
     // <form></form>

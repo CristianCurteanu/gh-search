@@ -189,6 +189,7 @@ func ProfileLayout(data ProfileData) templ.Component {
 	})
 }
 
+// Leaving this here, as otherwise it's cause circular dependencies between profile and repository packagies
 type Repository struct {
 	Name        string
 	FullName    string

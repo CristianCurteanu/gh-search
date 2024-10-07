@@ -2,6 +2,7 @@ package middlewares
 
 import (
 	"context"
+	"errors"
 	"log"
 	"net/http"
 	"time"
@@ -32,20 +33,25 @@ func (sm *CookiesSession) Execute(w http.ResponseWriter, r *http.Request) error 
 	if err != nil {
 		log.Printf("failed to get jwt token from cookie, err=%q", err)
 
-		return nil
+		return err
 	}
 
 	sessionId, err := jwtToken.Claims.GetSubject()
 	if err != nil {
 		log.Printf("failed to get subject from claims, err=%q", err)
 
-		return nil
+		return err
 	}
 
 	session, err := sm.sessionStorage.GetSession(r.Context(), sessionId)
 	if err != nil {
 		log.Printf("failed to get session, err=%q", err)
-		return nil
+		return err
+	}
+
+	if session.IsExpired() {
+		log.Println("session is expired, user should not be allowed")
+		return errors.New("session is expired")
 	}
 
 	ctx := context.WithValue(r.Context(), CookieAccessTokenKey, session.Secret)
@@ -56,6 +62,7 @@ func (sm *CookiesSession) Execute(w http.ResponseWriter, r *http.Request) error 
 
 func (sm *CookiesSession) GetFallback() http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		log.Printf("redirecting to login page, removing session cookie")
 		http.SetCookie(w, &http.Cookie{
 			Name:    CookieAccessTokenKey,
 			Value:   "",

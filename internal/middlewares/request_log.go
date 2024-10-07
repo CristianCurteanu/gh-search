@@ -13,7 +13,7 @@ func NewRequestLog() Middleware {
 }
 
 func (rl *RequestLog) Execute(w http.ResponseWriter, r *http.Request) error {
-	log.Printf("received request: [%s] %q", r.Method, r.URL.String())
+	log.Printf("[%s] %q", r.Method, r.URL.String())
 	return nil
 }
 

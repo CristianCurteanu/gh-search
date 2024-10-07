@@ -61,7 +61,12 @@ func (ah AuthHandlers) GithubCallbackHandler() http.HandlerFunc {
 		code := r.URL.Query().Get("code")
 
 		fmt.Printf("ah.githubClient: %v\n", ah.githubClient)
-		ghAuth, _ := ah.githubClient.GetGithubAccessToken(code)
+		ghAuth, err := ah.githubClient.GetGithubAccessToken(code)
+		if err != nil {
+			log.Printf("failed to get Github access token, err=%q", err)
+			http.Redirect(w, r, "/", http.StatusMovedPermanently)
+			return
+		}
 
 		sessionId := uuid.NewString()
 		sessionExpiresAt := time.Now().Add(time.Hour * 24).UTC()

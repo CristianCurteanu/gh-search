@@ -8,15 +8,11 @@ import (
 	"github.com/CristianCurteanu/gh-search/pkg/httpclient"
 )
 
-type HTTPClient interface {
-	Do(req *http.Request) (*http.Response, error)
-}
-
 type GithubApi struct {
 	clientId     string
 	clientSecret string
 	url          string
-	httpClient   HTTPClient
+	httpClient   httpclient.HTTPClient
 }
 
 func NewGithubClient(clientId, clientSecret string) *GithubApi {
@@ -24,6 +20,7 @@ func NewGithubClient(clientId, clientSecret string) *GithubApi {
 		clientId:     clientId,
 		clientSecret: clientSecret,
 		url:          "https://api.github.com",
+		httpClient:   &http.Client{Timeout: 10 * time.Second},
 	}
 
 }
@@ -32,13 +29,12 @@ func (a *GithubApi) SetHost(u string) {
 	a.url = u
 }
 
-func (a *GithubApi) WithClient(httpClient HTTPClient) {
+func (a *GithubApi) WithClient(httpClient httpclient.HTTPClient) {
 	a.httpClient = httpClient
 }
 
 func (a *GithubApi) SearchRepository(accessToken string, query string) (RepositorySearchResult, error) {
-	return httpclient.NewJsonRequest[RepositorySearchResult](nil).
-		SetTimeout(10*time.Second).
+	return httpclient.NewJsonRequest[RepositorySearchResult](a.httpClient).
 		SetHeader("Authorization", fmt.Sprintf("token %s", accessToken)).
 		Do(
 			http.MethodGet,
@@ -47,8 +43,7 @@ func (a *GithubApi) SearchRepository(accessToken string, query string) (Reposito
 }
 
 func (a *GithubApi) GetProfileInfo(accessToken string) (ProfileData, error) {
-	return httpclient.NewJsonRequest[ProfileData](nil).
-		SetTimeout(10*time.Second).
+	return httpclient.NewJsonRequest[ProfileData](a.httpClient).
 		SetHeader("Authorization", fmt.Sprintf("token %s", accessToken)).
 		Do(
 			http.MethodGet,
@@ -57,7 +52,7 @@ func (a *GithubApi) GetProfileInfo(accessToken string) (ProfileData, error) {
 }
 
 func (a *GithubApi) GetRepositoryInfo(accessToken, fullRepoName string) (Repository, error) {
-	return httpclient.NewJsonRequest[Repository](nil).SetTimeout(10*time.Second).
+	return httpclient.NewJsonRequest[Repository](a.httpClient).
 		SetHeader("Authorization", fmt.Sprintf("token %s", accessToken)).
 		Do(
 			http.MethodGet,
@@ -66,7 +61,7 @@ func (a *GithubApi) GetRepositoryInfo(accessToken, fullRepoName string) (Reposit
 }
 
 func (a *GithubApi) GetRepoContributors(accessToken, fullRepoName string) (Contributors, error) {
-	contributors, err := httpclient.NewJsonRequest[*Contributors](nil).SetTimeout(10*time.Second).
+	contributors, err := httpclient.NewJsonRequest[*Contributors](a.httpClient).
 		SetHeader("Authorization", fmt.Sprintf("token %s", accessToken)).
 		Do(
 			http.MethodGet,
@@ -76,7 +71,7 @@ func (a *GithubApi) GetRepoContributors(accessToken, fullRepoName string) (Contr
 }
 
 func (a *GithubApi) GetRepoCommits(accessToken, fullRepoName string) (Commits, error) {
-	commits, err := httpclient.NewJsonRequest[*Commits](nil).SetTimeout(10*time.Second).
+	commits, err := httpclient.NewJsonRequest[*Commits](a.httpClient).
 		SetHeader("Authorization", fmt.Sprintf("token %s", accessToken)).
 		Do(
 			http.MethodGet,
@@ -86,8 +81,7 @@ func (a *GithubApi) GetRepoCommits(accessToken, fullRepoName string) (Commits, e
 }
 
 func (a *GithubApi) GetGithubAccessToken(code string) (AccessTokenResponse, error) {
-	req := httpclient.NewJsonRequest[AccessTokenResponse](nil).
-		SetTimeout(10*time.Second).
+	req := httpclient.NewJsonRequest[AccessTokenResponse](a.httpClient).
 		SetHeader("Accept", "application/json")
 
 	fmt.Printf("api: %+v\n", a)

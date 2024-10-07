@@ -2,6 +2,7 @@ package profile
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 	"time"
 
@@ -32,7 +33,14 @@ func (ph *ProfileHandlers) GetProfilePage(w http.ResponseWriter, r *http.Request
 		t := r.Context().Value(middlewares.CookieAccessTokenKey)
 		token := t.(string)
 
-		githubData, _ := utils.GetProfileData(r.Context(), token, ph.githubClient, ph.cache)
+		githubData, err := utils.GetProfileData(r.Context(), token, ph.githubClient, ph.cache)
+		if err != nil {
+			log.Printf("failed to get profile data, it should be refreshed")
+			pages.WrappedNoResults(
+				mapProfileData(githubData),
+				"Something went wrong when accessing profile info. You can either reload page or retry login").Render(r.Context(), w)
+			return
+		}
 
 		pages.ProfilePage(mapProfileData(githubData)).Render(r.Context(), w)
 	})
@@ -42,6 +50,8 @@ func (ph *ProfileHandlers) Logout(w http.ResponseWriter, r *http.Request) {
 	ph.Handle(w, r, func(w http.ResponseWriter, r *http.Request) {
 		t := r.Context().Value(middlewares.CookieAccessTokenKey)
 		token := t.(string)
+
+		log.Println("logging out!!!")
 
 		http.SetCookie(w, &http.Cookie{
 			Name:    middlewares.CookieAccessTokenKey,

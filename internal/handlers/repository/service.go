@@ -140,7 +140,7 @@ func (s service) getRepoDetails(ctx context.Context, token string, query url.Val
 func (s service) getRepositoryData(ctx context.Context, i repoDetailsInput) (githubapi.Repository, error) {
 	var err error
 	var data githubapi.Repository
-	if s.cache.Exists(ctx, i.GetKey()) {
+	if !s.cache.Exists(ctx, i.GetKey()) {
 		data, err = s.githubClient.GetRepositoryInfo(i.token, i.GetRepoFullName())
 		if err != nil {
 			return data, err
@@ -162,7 +162,7 @@ func (s service) getRepositoryData(ctx context.Context, i repoDetailsInput) (git
 func (s service) getRepoCommits(ctx context.Context, i repoDetailsInput) (githubapi.Commits, error) {
 	var err error
 	var data githubapi.Commits
-	if s.cache.Exists(ctx, i.GetKey()) {
+	if !s.cache.Exists(ctx, i.GetKey()) {
 		data, err = s.githubClient.GetRepoCommits(i.token, i.GetRepoFullName())
 		if err != nil {
 			return data, err
@@ -184,7 +184,7 @@ func (s service) getRepoCommits(ctx context.Context, i repoDetailsInput) (github
 func (s service) getRepoContributors(ctx context.Context, i repoDetailsInput) (githubapi.Contributors, error) {
 	var err error
 	var data githubapi.Contributors
-	if s.cache.Exists(ctx, i.GetKey()) {
+	if !s.cache.Exists(ctx, i.GetKey()) {
 		data, err = s.githubClient.GetRepoContributors(i.token, i.GetRepoFullName())
 		if err != nil {
 			return data, err

@@ -34,7 +34,7 @@ func NoResults(message string) templ.Component {
 			templ_7745c5c3_Var1 = templ.NopComponent
 		}
 		ctx = templ.ClearChildren(ctx)
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<div class=\"container p-32\"><img alt=\"Mona looking through a globe hologram for code\" src=\"https://github.com/images/modules/search/light.png\" srcset=\"https://github.com/images/modules/search/light.png 1x, https://github.com/images/modules/search/light2x.png 2x\" style=\"display: block;\"><div class=\"container content-center mt-20\"><h2 class=\"text-3xl font-bold ml-35\">")
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("<div class=\"container p-32\"><img alt=\"Mona looking through a globe hologram for code\" src=\"https://github.com/images/modules/search/light.png\" srcset=\"https://github.com/images/modules/search/light.png 1x, https://github.com/images/modules/search/light2x.png 2x\" style=\"display: block;\"><div class=\"container content-center mt-20\"><h2 class=\"text-lg font-bold ml-35\">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

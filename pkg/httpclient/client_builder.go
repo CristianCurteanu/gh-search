@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"io"
 	"net/http"
-	"time"
 )
 
 type SerializationFunc func(any) ([]byte, error)
@@ -13,12 +12,12 @@ type DeserializationFunc func(data []byte, v any) (bool, error)
 
 type JSONRequest[T any] struct {
 	headers     map[string]string
-	client      *http.Client
+	client      HTTPClient
 	serialize   SerializationFunc
 	deserialize DeserializationFunc
 }
 
-func NewJsonRequest[RESP any](client *http.Client) *JSONRequest[RESP] {
+func NewJsonRequest[RESP any](client HTTPClient) *JSONRequest[RESP] {
 	if client == nil {
 		client = http.DefaultClient
 	}
@@ -37,12 +36,6 @@ func NewJsonRequest[RESP any](client *http.Client) *JSONRequest[RESP] {
 
 func (rq *JSONRequest[RESP]) SetHeader(header, headerVal string) *JSONRequest[RESP] {
 	rq.headers[header] = headerVal
-
-	return rq
-}
-
-func (rq *JSONRequest[RESP]) SetTimeout(t time.Duration) *JSONRequest[RESP] {
-	rq.client.Timeout = t
 
 	return rq
 }

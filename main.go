@@ -16,12 +16,24 @@ import (
 	"github.com/redis/go-redis/v9"
 )
 
-const (
-	githubClientID     = "Ov23liXmz8CFjEWHmlo8"
-	githubClientSecret = "0d7c1c44965462927f7ba2a223877c373db4800f"
+var (
+	githubClientID     = os.Getenv("GITHUB_ID")
+	githubClientSecret = os.Getenv("GITHUB_SECRET")
 )
 
+func checkGithubCredentials() {
+	if githubClientID == "" {
+		panic("GITHUB_ID is not set")
+	}
+
+	if githubClientSecret == "" {
+		panic("GITHUB_SECRET is not set")
+	}
+}
+
 func main() {
+	checkGithubCredentials()
+
 	mux := http.NewServeMux()
 	githubClient := githubapi.NewGithubClient(githubClientID, githubClientSecret)
 

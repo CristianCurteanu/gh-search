@@ -12,7 +12,7 @@ type Session struct {
 }
 
 func (s Session) IsExpired() bool {
-	return s.ExpiresAt.After(time.Now().UTC())
+	return s.ExpiresAt.Before(time.Now().UTC())
 }
 
 type SessionStorage interface {

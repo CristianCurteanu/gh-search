@@ -19,6 +19,7 @@ import (
 var (
 	githubClientID     = os.Getenv("GITHUB_ID")
 	githubClientSecret = os.Getenv("GITHUB_SECRET")
+	githubRedirectURL  = os.Getenv("GITHUB_REDIRECT_URL")
 )
 
 func checkGithubCredentials() {
@@ -28,6 +29,10 @@ func checkGithubCredentials() {
 
 	if githubClientSecret == "" {
 		panic("GITHUB_SECRET is not set")
+	}
+
+	if githubRedirectURL == "" {
+		panic("GITHUB_REDIRECT_URL is not set")
 	}
 }
 
@@ -46,7 +51,7 @@ func main() {
 		auth.AuthHandlersConfig{
 			ClientId:     githubClientID,
 			ClientSecret: githubClientSecret,
-			RedirectUrl:  "http://localhost:3000/auth/callback/success",
+			RedirectUrl:  githubRedirectURL,
 		},
 		githubClient,
 		redisSessionStorage,

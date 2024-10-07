@@ -14,7 +14,15 @@ There are two different options to launch this application:
 
 There is already a defined docker compose in this repo, and makefile tasks have been created to simplify the run.
 
-Before run, please make sure to up `GITHUB_ID` and `GITHUB_SECRET` to a `.env` (take a look at `.env.example`) file, and run source command:
+Before run, please make sure to up `GITHUB_ID`, `GITHUB_SECRET` and `GITHUB_REDIRECT_URL` to a `.env` (take a look at `.env.example`) file, like this: 
+
+```
+GITHUB_ID=xxxxx
+GITHUB_SECRET=xxxxxxxxxxxxxxxxxxxxxxxx
+GITHUB_REDIRECT_URL=http://localhost:3000/auth/callback/success
+```
+
+and run source command:
 
 ```shell
 $ source .env
@@ -49,9 +57,10 @@ If you do this way, make sure that you Redis DB is running on your machine. Also
 ```shell
 REDIS_HOST=localhost
 REDIS_PORT=6379
-REDIS_PASSWORD=<whatever password is set, or you can use "false" if password not set, empty password will fail the app run>
+REDIS_PASSWORD=<whatever password is set, or you can use false if password not set>
 GITHUB_ID=xxxxx
 GITHUB_SECRET=xxxxxxxxxxxxxxxxxxxxxxxx
+GITHUB_REDIRECT_URL=http://localhost:3000/auth/callback/success
 ```
 
 Then, you would want to build and run the app manually, you can run following commands:

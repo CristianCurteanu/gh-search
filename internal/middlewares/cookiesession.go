@@ -26,6 +26,7 @@ func NewCookieSessionHandler(sessionStorage auth.SessionStorage, jwtSigner *auth
 func (sm *CookiesSession) Execute(w http.ResponseWriter, r *http.Request) error {
 	token, err := r.Cookie("access_token")
 	if err != nil {
+		log.Printf("no %q cookie found, err=%q", CookieAccessTokenKey, err)
 		return err
 	}
 

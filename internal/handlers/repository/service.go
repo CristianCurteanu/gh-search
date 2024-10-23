@@ -99,8 +99,8 @@ type repoDetailsInput struct {
 	owner string
 }
 
-func (rdi repoDetailsInput) GetKey() string {
-	return fmt.Sprintf("%s:%s:%s", rdi.token, rdi.owner, rdi.repo)
+func (rdi repoDetailsInput) GetKey(prefix string) string {
+	return fmt.Sprintf("%s::%s:%s:%s", prefix, rdi.token, rdi.owner, rdi.repo)
 }
 
 func (rdi repoDetailsInput) GetRepoFullName() string {
@@ -152,14 +152,17 @@ func (s service) getRepoDetails(ctx context.Context, token string, query url.Val
 func (s service) getRepositoryData(ctx context.Context, i repoDetailsInput) (githubapi.Repository, error) {
 	var err error
 	var data githubapi.Repository
-	if !s.cache.Exists(ctx, i.GetKey()) {
+	key := i.GetKey("repo-data")
+
+	fmt.Printf("s.cache.Exists(ctx, i.GetKey()): %v\n", s.cache.Exists(ctx, key))
+	if !s.cache.Exists(ctx, key) {
 		data, err = s.githubClient.GetRepositoryInfo(i.token, i.GetRepoFullName())
 		if err != nil {
 			return data, err
 		}
-		s.cache.Set(ctx, i.token, data)
+		s.cache.Set(ctx, key, data)
 	} else {
-		err := s.cache.Get(ctx, i.token, &data)
+		err := s.cache.Get(ctx, key, &data)
 		if err != nil {
 			data, err = s.githubClient.GetRepositoryInfo(i.token, i.GetRepoFullName())
 			if err != nil {
@@ -174,14 +177,15 @@ func (s service) getRepositoryData(ctx context.Context, i repoDetailsInput) (git
 func (s service) getRepoCommits(ctx context.Context, i repoDetailsInput) (githubapi.Commits, error) {
 	var err error
 	var data githubapi.Commits
-	if !s.cache.Exists(ctx, i.GetKey()) {
+	key := i.GetKey("commits")
+	if !s.cache.Exists(ctx, key) {
 		data, err = s.githubClient.GetRepoCommits(i.token, i.GetRepoFullName())
 		if err != nil {
 			return data, err
 		}
-		s.cache.Set(ctx, i.token, data)
+		s.cache.Set(ctx, key, data)
 	} else {
-		err := s.cache.Get(ctx, i.token, &data)
+		err := s.cache.Get(ctx, key, &data)
 		if err != nil {
 			data, err = s.githubClient.GetRepoCommits(i.token, i.GetRepoFullName())
 			if err != nil {
@@ -196,16 +200,18 @@ func (s service) getRepoCommits(ctx context.Context, i repoDetailsInput) (github
 func (s service) getRepoContributors(ctx context.Context, i repoDetailsInput) (githubapi.Contributors, error) {
 	var err error
 	var data githubapi.Contributors
-	if !s.cache.Exists(ctx, i.GetKey()) {
+	key := i.GetKey("contributors")
+
+	if !s.cache.Exists(ctx, key) {
 		data, err = s.githubClient.GetRepoContributors(i.token, i.GetRepoFullName())
 		if err != nil {
 			return data, err
 		}
-		s.cache.Set(ctx, i.token, data)
+		s.cache.Set(ctx, key, data)
 	} else {
-		err := s.cache.Get(ctx, i.token, &data)
+		err := s.cache.Get(ctx, key, &data)
 		if err != nil {
-			data, err = s.githubClient.GetRepoContributors(i.token, i.GetRepoFullName())
+			data, err = s.githubClient.GetRepoContributors(key, i.GetRepoFullName())
 			if err != nil {
 				return data, err
 			}
